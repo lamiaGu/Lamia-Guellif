@@ -1,43 +1,69 @@
 # Agent de veille académique — uOttawa BCom Finance
 
-> Agent IA conversationnel pour atteindre **95% par cours** en Baccalauréat en Commerce, spécialité Finance, à l'Université d'Ottawa.
+> Agent IA conversationnel pour atteindre **95% par cours**.
+> Interface web moderne, accessible depuis n'importe quel appareil (téléphone, tablette, ordinateur).
 
 ---
 
-## Utilisation rapide (navigateur)
+## Déploiement en 3 minutes sur Railway (lien URL public)
 
-### Option 1 — Streamlit Cloud (recommandé, aucune installation)
+Railway est la façon la plus simple d'obtenir un lien URL public pour partager l'app.
 
-1. Va sur [streamlit.io/cloud](https://streamlit.io/cloud)
-2. Connecte ton compte GitHub
-3. Déploie ce dépôt → l'app tourne dans le cloud
-4. Partage le lien à tes collègues
+### Étape 1 — Déployer
 
-### Option 2 — En local (5 minutes)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
 
+1. Va sur **[railway.app](https://railway.app)** → "New Project" → "Deploy from GitHub repo"
+2. Sélectionne ce dépôt (`lamiaGu/Lamia-Guellif`)
+3. Dans les variables d'environnement, ajoute :
+   ```
+   ANTHROPIC_API_KEY = sk-ant-...
+   ```
+4. La commande de démarrage est détectée automatiquement via `Procfile`
+
+### Étape 2 — Partager le lien
+
+Railway génère un lien public comme `https://ton-app.railway.app`.
+Partage ce lien — accessible sur téléphone, tablette, ordinateur.
+
+---
+
+## Autres options de déploiement
+
+### Render (gratuit)
+1. Va sur [render.com](https://render.com) → "New Web Service"
+2. Connecte ce dépôt GitHub
+3. Build command : `pip install -r requirements.txt`
+4. Start command : `uvicorn server:app --host 0.0.0.0 --port $PORT`
+5. Ajoute la variable d'env `ANTHROPIC_API_KEY`
+
+### En local
 ```bash
-# 1. Cloner le dépôt
 git clone https://github.com/lamiaGu/Lamia-Guellif.git
 cd Lamia-Guellif
-
-# 2. Installer les dépendances
 pip install -r requirements.txt
-
-# 3. Lancer l'interface web
-streamlit run app.py
+export ANTHROPIC_API_KEY="sk-ant-..."
+uvicorn server:app --reload
+# Ouvre http://localhost:8000
 ```
-
-L'application s'ouvre automatiquement dans ton navigateur sur `http://localhost:8501`.
 
 ---
 
-## Clé API requise
+## Architecture
 
-L'agent utilise Claude (Anthropic). Chaque étudiant entre sa propre clé :
+```
+├── server.py           # Backend FastAPI (API + streaming SSE)
+├── campus_agent.py     # Logique de l'agent et outils
+├── static/
+│   └── index.html      # Interface web (dark theme, chat en temps réel)
+├── data/
+│   ├── template.json   # Modèle de cours par défaut
+│   └── users/          # Données isolées par étudiant (auto-créées)
+├── Procfile            # Commande de démarrage (Railway/Render)
+└── requirements.txt
+```
 
-1. Créer un compte sur [console.anthropic.com](https://console.anthropic.com)
-2. Générer une clé API (gratuit pour commencer)
-3. La coller dans la barre latérale de l'application
+**Isolation des données** : chaque étudiant obtient automatiquement ses propres données via un identifiant de session stocké dans son navigateur. Pas de compte requis.
 
 ---
 
@@ -45,46 +71,10 @@ L'agent utilise Claude (Anthropic). Chaque étudiant entre sa propre clé :
 
 | Fonctionnalité | Description |
 |---|---|
-| Suivi des notes | Enregistre chaque évaluation (examen, devoir, projet) |
-| Projection 95% | Calcule la note requise sur chaque évaluation restante |
+| Chat en temps réel | Réponses streamées mot par mot |
+| Suivi des notes | Enregistre chaque évaluation par cours |
+| Projection 95% | Calcule la note requise sur le reste |
 | Priorités | Identifie les cours les plus urgents |
-| Recommandations | Conseils d'étude personnalisés |
-| Moyenne générale | GPA pondéré sur tous les cours notés |
-| Ajout de cours | Personnalise les cours selon ton programme réel |
-
-## Cours inclus par défaut
-
-| Code | Cours |
-|---|---|
-| ADM1100 | Introduction aux affaires en contexte mondial |
-| ADM2340 | Comptabilité financière |
-| ADM2350 | Comptabilité de gestion |
-| ADM3360 | Finance d'entreprise |
-| ADM3380 | Marchés financiers |
-| FIN3520 | Placements |
-| FIN4135 | Analyse des états financiers |
-| ECO1104 | Introduction à la microéconomie |
-| ECO1504 | Introduction à la macroéconomie |
-| MAT2377 | Probabilités et statistiques |
-
----
-
-## Exemples de questions
-
-- *"Montre-moi tous mes cours"*
-- *"J'ai eu 88% à l'examen mi-session de ADM2340"*
-- *"Quelle note dois-je avoir sur le final de FIN3520 pour avoir 95% ?"*
-- *"Quels cours dois-je prioriser cette semaine ?"*
-- *"Quelle est ma moyenne générale ?"*
-
----
-
-## Structure du projet
-
-```
-├── app.py              # Interface web (Streamlit)
-├── campus_agent.py     # Logique de l'agent et outils
-├── data/
-│   └── courses.json    # Cours et notes (modifiable)
-└── requirements.txt    # Dépendances Python
-```
+| Tableau de bord | Barres de progression en sidebar |
+| Multi-utilisateur | Données isolées par navigateur |
+| Mobile friendly | Fonctionne sur téléphone |
