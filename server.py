@@ -32,10 +32,10 @@ app.add_middleware(
 )
 
 
-def get_client() -> anthropic.Anthropic:
+def get_client() -> anthropic.Anthropic | None:
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
-        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY non configurée sur le serveur.")
+        return None
     return anthropic.Anthropic(api_key=key)
 
 
@@ -69,6 +69,10 @@ class ChatRequest(BaseModel):
 
 async def agent_stream(request: ChatRequest, session_id: str) -> AsyncGenerator[str, None]:
     client = get_client()
+    if client is None:
+        yield f"data: {json.dumps({'type': 'error', 'content': '❌ Clé API manquante. Configure ANTHROPIC_API_KEY dans Railway → Variables.'})}\n\n"
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+        return
 
     # Reconstruire l'historique API
     api_messages = []
